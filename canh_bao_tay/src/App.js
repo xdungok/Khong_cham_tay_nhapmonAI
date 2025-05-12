@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./App.css";
 import soundURL from "./assets/warning.mp3";
-import { Howl, Howler } from "howler";
+import { Howl } from "howler";
 import * as tf from "@tensorflow/tfjs";
 
 const mobilenet = require("@tensorflow-models/mobilenet");
 const knnClassifier = require("@tensorflow-models/knn-classifier");
 
-var sound = new Howl({
+const sound = new Howl({
   src: [soundURL],
 });
 
@@ -21,6 +21,11 @@ function App() {
   const model = useRef();
   const isRunning = useRef(false);
 
+  const [step, setStep] = useState("train1"); // train1 -> train2 -> ready
+  const [isTraining, setIsTraining] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState("");
+
   const init = async () => {
     console.log("init...");
     await setUpCamera();
@@ -30,7 +35,7 @@ function App() {
     classifier.current = knnClassifier.create();
 
     console.log("Setup Done");
-    console.log("Khong cham tay len mat va bam Train 1");
+    console.log("Không chạm tay lên mặt và bấm Train 1");
   };
 
   const setUpCamera = () => {
@@ -39,7 +44,7 @@ function App() {
         navigator.getUserMedia ||
         navigator.webkitGetUserMedia ||
         navigator.mozgetUserMedia ||
-        navigator.msgetUserMedia;
+        navigator.msGetUserMedia;
 
       if (navigator.getUserMedia) {
         navigator.getUserMedia(
@@ -55,11 +60,24 @@ function App() {
   };
 
   const train = async (label) => {
-    console.log(`[${label}] Đang train cho máy của bạn`);
+    setIsTraining(true);
+    setProgress(0);
+    setStatusText(
+      label === NOT_TOUCH_LABEL
+        ? "Đang train mẫu KHÔNG CHẠM..."
+        : "Đang train mẫu CHẠM MẶT..."
+    );
+
     for (let i = 0; i < TRAINING_TIMES; i++) {
-      console.log(`Progress ${parseInt(((i + 1) / TRAINING_TIMES) * 100)}%`);
+      setProgress(((i + 1) / TRAINING_TIMES) * 100);
       await training(label);
     }
+
+    if (label === NOT_TOUCH_LABEL) setStep("train2");
+    else if (label === TOUCHED_LABEL) setStep("ready");
+
+    setIsTraining(false);
+    setStatusText("");
   };
 
   const training = (label) => {
@@ -90,7 +108,7 @@ function App() {
     console.log("Confidences: ", result.confidences);
 
     if (result.label === TOUCHED_LABEL) {
-      soundURL.play();
+      sound.play();
     }
 
     await sleep(200);
@@ -103,38 +121,67 @@ function App() {
 
   useEffect(() => {
     init();
-
-    // cleanup
     return () => {};
   }, []);
 
   return (
     <div className="main">
+      <h2 style={{ marginBottom: "16px" }}>🧠 AI Touch Detection</h2>
       <video ref={video} className="video" autoPlay></video>
+
+      {statusText && <p style={{ color: "#fff", marginTop: "16px" }}>{statusText}</p>}
+
+      {isTraining && (
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      )}
+
       <div className="control">
-        <button className="btn" onClick={() => train(NOT_TOUCH_LABEL)}>
-          Train 1
-        </button>
-        <button className="btn" onClick={() => train(TOUCHED_LABEL)}>
-          Train 2
-        </button>
-        <button
-          className="btn"
-          onClick={() => {
-            isRunning.current = true;
-            run();
-          }}
-        >
-          Start
-        </button>
-        <button
-          className="btn"
-          onClick={() => {
-            isRunning.current = false;
-          }}
-        >
-          Stop
-        </button>
+        {step === "train1" && (
+          <button
+            className="btn"
+            onClick={() => train(NOT_TOUCH_LABEL)}
+            disabled={isTraining}
+          >
+            {isTraining ? "Đang Train 1..." : "Train 1"}
+          </button>
+        )}
+
+        {step === "train2" && (
+          <button
+            className="btn"
+            onClick={() => train(TOUCHED_LABEL)}
+            disabled={isTraining}
+          >
+            {isTraining ? "Đang Train 2..." : "Train 2"}
+          </button>
+        )}
+
+        {step === "ready" && (
+          <>
+            <button
+              className="btn"
+              onClick={() => {
+                isRunning.current = true;
+                run();
+              }}
+            >
+              Start
+            </button>
+            <button
+              className="btn"
+              onClick={() => {
+                isRunning.current = false;
+              }}
+            >
+              Stop
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
