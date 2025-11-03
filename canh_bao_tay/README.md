@@ -1,9 +1,16 @@
-
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 
 import java.io.*;
 import java.net.*;
 import UDP.Book;
 
+/**
+ *
+ * @author pc
+ */
 public class _6jbWaevI_UDP_Object {
     public static void main(String[] args) {
         String studentCode = "B22DCCN129";  // thay bằng MSSV của bạn
@@ -137,59 +144,59 @@ public class _6jbWaevI_UDP_Object {
 }
 
 
-//import java.io.*;
-//import java.net.*;
-//import TCP.Laptop;
-//
-//public class Fp4dn4S5_TCP_ObjectStream {
-//    public static void main(String[] args) {
-//        String studentCode = "B22DCCN129";
-//        String qCode = "Fp4dn4S5";
-//        String host = "203.162.10.109";
-//        int port = 2209;
-//
-//        try (Socket socket = new Socket(host, port)) {
-//            socket.setSoTimeout(5000);
-//
-//            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-//            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-//
-//            // B1. Gửi chuỗi định danh
-//            oos.writeObject(studentCode + ";" + qCode);
-//            oos.flush();
-//
-//            // B2. Nhận đối tượng Laptop
-//            Object obj = ois.readObject();
-//            if (obj instanceof Laptop) {
-//                Laptop laptop = (Laptop) obj;
-//                System.out.println("Received: " + laptop);
-//
-//                // B3. Sửa thông tin bị đảo
-//                // --- a) Đổi vị trí từ đầu và từ cuối ---
-//                String[] parts = laptop.getName().trim().split("\\s+");
-//                if (parts.length >= 2) {
-//                    String temp = parts[0];
-//                    parts[0] = parts[parts.length - 1];
-//                    parts[parts.length - 1] = temp;
-//                }
-//                String fixedName = String.join(" ", parts);
-//                laptop.setName(fixedName);
-//
-//                // --- b) Đảo ngược số lượng ---
-//                String reversed = new StringBuilder(String.valueOf(laptop.getQuantity())).reverse().toString();
-//                laptop.setQuantity(Integer.parseInt(reversed));
-//
-//                System.out.println("Fixed: " + laptop);
-//
-//                // B4. Gửi lại đối tượng đã sửa
-//                oos.writeObject(laptop);
-//                oos.flush();
-//            }
-//
-//            socket.close();
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//}
+import java.io.*;
+import java.net.*;
+import TCP.Laptop;
+
+public class Fp4dn4S5_TCP_ObjectStream {
+    public static void main(String[] args) {
+        String studentCode = "B22DCCN129";
+        String qCode = "Fp4dn4S5";
+        String host = "203.162.10.109";
+        int port = 2209;
+
+        try (Socket socket = new Socket(host, port)) {
+            socket.setSoTimeout(5000);
+
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+
+            // B1. Gửi chuỗi định danh
+            oos.writeObject(studentCode + ";" + qCode);
+            oos.flush();
+
+            // B2. Nhận đối tượng Laptop
+            Object obj = ois.readObject();
+            if (obj instanceof Laptop) {
+                Laptop laptop = (Laptop) obj;
+                System.out.println("Received: " + laptop);
+
+                // B3. Sửa thông tin bị đảo
+                // --- a) Đổi vị trí từ đầu và từ cuối ---
+                String[] parts = laptop.getName().trim().split("\\s+");
+                if (parts.length >= 2) {
+                    String temp = parts[0];
+                    parts[0] = parts[parts.length - 1];
+                    parts[parts.length - 1] = temp;
+                }
+                String fixedName = String.join(" ", parts);
+                laptop.setName(fixedName);
+
+                // --- b) Đảo ngược số lượng ---
+                String reversed = new StringBuilder(String.valueOf(laptop.getQuantity())).reverse().toString();
+                laptop.setQuantity(Integer.parseInt(reversed));
+
+                System.out.println("Fixed: " + laptop);
+
+                // B4. Gửi lại đối tượng đã sửa
+                oos.writeObject(laptop);
+                oos.flush();
+            }
+
+            socket.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
