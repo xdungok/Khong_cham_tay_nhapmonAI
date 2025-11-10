@@ -35,6 +35,57 @@ public class CharacterClientMain {
     }
 }
 
+data-ws: chuyển hệ 10->8 và 16
+package client;
+
+import java.util.*;
+import service.DataService;
+import service.DataService_Service;
+
+public class DataClientMain {
+    public static void main(String[] args) {
+        try {
+            // 🔹 Thông tin sinh viên và mã câu hỏi
+            String studentCode = "B22DCCN129";
+            String qCode = "zBC7JEDm";
+
+            // 🔹 Tạo service và port để kết nối SOAP web service
+            DataService_Service service = new DataService_Service();
+            DataService port = service.getDataServicePort();
+
+            // 🔹 Gọi phương thức getData để lấy danh sách số nguyên
+            List<Integer> numbers = port.getData(studentCode, qCode);
+            System.out.println("📥 Dữ liệu nhận từ server:");
+            System.out.println(numbers);
+
+            // 🔹 Tạo danh sách kết quả
+            List<String> resultList = new ArrayList<>();
+
+            for (Integer num : numbers) {
+                if (num == null) continue;
+                String base8 = Integer.toOctalString(num);
+                String base16 = Integer.toHexString(num).toUpperCase();
+                String combined = base8 + "|" + base16;
+                resultList.add(combined);
+            }
+
+            // 🔹 In ra kết quả chuyển đổi
+            System.out.println("📤 Kết quả sau chuyển đổi:");
+            for (String s : resultList) {
+                System.out.println(s);
+            }
+
+            // 🔹 Gửi danh sách kết quả về server
+            port.submitDataStringArray(studentCode, qCode, resultList);
+            System.out.println("✅ Đã gửi danh sách kết quả về server thành công.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
 
 2) Object-ws: sắp xếp nhân viên thâm niên cao thấp 
 package client;
@@ -85,6 +136,58 @@ public class CharacterClientMain {
         }
     }
 }
+
+Object-ws: lọc giữ sinh viên
+package client;
+
+import java.util.*;
+import service.ObjectService;
+import service.ObjectService_Service;
+import service.Student;
+
+public class CharacterClientMain {
+    public static void main(String[] args) {
+        try {
+            // 🔹 Thông tin sinh viên và mã câu hỏi
+            String studentCode = "B22DCCN021";
+            String qCode = "SEg1fN6N";
+
+            // 🔹 Kết nối tới Web Service
+            ObjectService_Service service = new ObjectService_Service();
+            ObjectService port = service.getObjectServicePort();
+
+            // 🔹 Gọi hàm requestListStudent để nhận danh sách sinh viên
+            List<Student> students = port.requestListStudent(studentCode, qCode);
+            System.out.println("📥 Danh sách sinh viên nhận từ server:");
+            for (Student s : students) {
+                System.out.println(s.getName() + " - " + s.getScore());
+            }
+
+            // 🔹 Lọc sinh viên thuộc nhóm A hoặc D
+            List<Student> filtered = new ArrayList<>();
+            for (Student s : students) {
+                float score = s.getScore();
+                if (score >= 8.0 || score < 5.0) { // nhóm A hoặc D
+                    filtered.add(s);
+                }
+            }
+
+            // 🔹 In danh sách đã lọc
+            System.out.println("\n📤 Danh sách sinh viên nhóm A và D:");
+            for (Student s : filtered) {
+                System.out.println(s.getName() + " - " + s.getScore());
+            }
+
+            // 🔹 Gửi kết quả về server
+            port.submitListStudent(studentCode, qCode, filtered);
+            System.out.println("\n✅ Đã gửi danh sách sinh viên nhóm A và D về server.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
 
 
 3) Character-ws: cùng số nguyên âm:
@@ -158,6 +261,93 @@ public class CharacterClientMain {
         return count;
     }
 }
+
+Character-ws: chuyển chuỗi thành 3 định dạng
+package client;
+
+import java.util.*;
+import service.CharacterService;
+import service.CharacterService_Service;
+
+public class CharacterClientMain {
+    public static void main(String[] args) {
+        try {
+            // 🔹 Thông tin sinh viên và mã câu hỏi
+            String studentCode = "B22DCCN021";
+            String qCode = "x4R8JP2B";
+
+            // 🔹 Tạo service và port để kết nối tới SOAP service
+            CharacterService_Service service = new CharacterService_Service();
+            CharacterService port = service.getCharacterServicePort();
+
+            // 🔹 Gọi hàm requestString để lấy dữ liệu gốc
+            String original = port.requestString(studentCode, qCode);
+            System.out.println("Chuỗi gốc nhận từ server:");
+            System.out.println(original);
+
+            // 🔹 Chuẩn hóa chuỗi: tách các từ bằng dấu cách hoặc gạch dưới
+            String[] words = original.trim().split("[ _]+");
+
+            // 🔹 Tạo ba định dạng theo yêu cầu
+            String pascalCase = toPascalCase(words);
+            String camelCase = toCamelCase(words);
+            String snakeCase = toSnakeCase(words);
+
+            // 🔹 In ra kết quả
+            System.out.println("Kết quả chuyển đổi:");
+            System.out.println("PascalCase: " + pascalCase);
+            System.out.println("camelCase: " + camelCase);
+            System.out.println("snake_case: " + snakeCase);
+
+            // 🔹 Gửi mảng kết quả về server theo thứ tự yêu cầu
+            List<String> resultList = Arrays.asList(pascalCase, camelCase, snakeCase);
+            port.submitCharacterStringArray(studentCode, qCode, resultList);
+
+            System.out.println("✅ Đã gửi kết quả về server thành công.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 🧠 Hàm tạo PascalCase
+    private static String toPascalCase(String[] words) {
+        StringBuilder sb = new StringBuilder();
+        for (String w : words) {
+            if (!w.isEmpty()) {
+                sb.append(Character.toUpperCase(w.charAt(0)))
+                  .append(w.substring(1).toLowerCase());
+            }
+        }
+        return sb.toString();
+    }
+
+    // 🧠 Hàm tạo camelCase
+    private static String toCamelCase(String[] words) {
+        if (words.length == 0) return "";
+        StringBuilder sb = new StringBuilder(words[0].toLowerCase());
+        for (int i = 1; i < words.length; i++) {
+            String w = words[i];
+            if (!w.isEmpty()) {
+                sb.append(Character.toUpperCase(w.charAt(0)))
+                  .append(w.substring(1).toLowerCase());
+            }
+        }
+        return sb.toString();
+    }
+
+    // 🧠 Hàm tạo snake_case
+    private static String toSnakeCase(String[] words) {
+        List<String> lowerWords = new ArrayList<>();
+        for (String w : words) {
+            if (!w.isEmpty()) {
+                lowerWords.add(w.toLowerCase());
+            }
+        }
+        return String.join("_", lowerWords);
+    }
+}
+
 
 
 
@@ -283,6 +473,75 @@ public class RMIClient {
     }
 }
 
+RMI-byte: chia mảnh chẵn lẻ:
+package Client;
+
+import RMI.ByteService;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.List;
+
+public class RMIClient {
+    public static void main(String[] args) {
+        try {
+            // 🔹 Thông tin sinh viên và mã câu hỏi
+            String studentCode = "B22DCCN129"; 
+            String qCode = "CCJECxDx";
+
+            // 🔹 (a) Kết nối tới RMI Registry trên server
+            Registry registry = LocateRegistry.getRegistry("203.162.10.109", 1099);
+            ByteService service = (ByteService) registry.lookup("RMIByteService");
+
+            // 🔹 Gọi requestData để lấy mảng byte từ server
+            byte[] data = service.requestData(studentCode, qCode);
+            System.out.print("Dữ liệu gốc nhận từ server: ");
+            printArray(data);
+
+            // 🔹 (b) Phân chia mảng byte[] thành chẵn và lẻ
+            List<Byte> evenList = new ArrayList<>();
+            List<Byte> oddList = new ArrayList<>();
+
+            for (byte b : data) {
+                if (b % 2 == 0)
+                    evenList.add(b);
+                else
+                    oddList.add(b);
+            }
+
+            // Ghép 2 danh sách: chẵn trước, lẻ sau
+            List<Byte> resultList = new ArrayList<>();
+            resultList.addAll(evenList);
+            resultList.addAll(oddList);
+
+            // Chuyển danh sách về mảng byte[]
+            byte[] result = new byte[resultList.size()];
+            for (int i = 0; i < resultList.size(); i++) {
+                result[i] = resultList.get(i);
+            }
+
+            System.out.print("Mảng sau khi sắp xếp chẵn-lẻ: ");
+            printArray(result);
+
+            // 🔹 (c) Gửi dữ liệu kết quả trở lại server
+            service.submitData(studentCode, qCode, result);
+            System.out.println("✅ Đã gửi dữ liệu byte[] đã xử lý về server thành công!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 🔹 Hàm tiện ích in mảng byte
+    private static void printArray(byte[] arr) {
+        System.out.print("[");
+        for (int i = 0; i < arr.length; i++) {
+            System.out.print(arr[i]);
+            if (i < arr.length - 1) System.out.print(", ");
+        }
+        System.out.println("]");
+    }
+}
 
 
 
@@ -580,6 +839,58 @@ public class RMIClient {
             // --- (d) Gửi lại server ---
             service.submitObject(studentCode, qCode, order);
             System.out.println("Đã gửi lại đối tượng Order đã cập nhật thành công!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+RMI-object: mã giảm giá:
+package Client;
+
+import RMI.ObjectService;
+import RMI.Product;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class RMIClient {
+    public static void main(String[] args) {
+        try {
+            // 🔹 Thông tin sinh viên và mã câu hỏi
+            String studentCode = "B22DCCN129"; 
+            String qCode = "EyLG9oK1";
+
+            // 🔹 (1) Kết nối tới RMI Server
+            Registry registry = LocateRegistry.getRegistry("203.162.10.109", 1099);
+            ObjectService service = (ObjectService) registry.lookup("RMIObjectService");
+
+            // 🔹 (2) Nhận đối tượng ProductX từ server
+            ProductX product = (ProductX) service.requestObject(studentCode, qCode);
+            System.out.println("Đối tượng ProductX nhận được từ server:");
+            System.out.println("ID: " + product.getId());
+            System.out.println("Code: " + product.getCode());
+            System.out.println("DiscountCode: " + product.getDiscountCode());
+            System.out.println("Discount ban đầu: " + product.getDiscount());
+
+            // 🔹 (3) Tính tổng các chữ số trong discountCode
+            String discountCode = product.getDiscountCode();
+            int sum = 0;
+            for (char c : discountCode.toCharArray()) {
+                if (Character.isDigit(c)) {
+                    sum += Character.getNumericValue(c);
+                }
+            }
+
+            // 🔹 Cập nhật discount
+            product.setDiscount(sum);
+            System.out.println("✅ Tổng các chữ số trong discountCode = " + sum);
+            System.out.println("Đã cập nhật discount mới cho ProductX!");
+
+            // 🔹 (4) Gửi lại đối tượng đã cập nhật về server
+            service.submitObject(studentCode, qCode, product);
+            System.out.println("✅ Đã gửi ProductX đã cập nhật về server thành công!");
 
         } catch (Exception e) {
             e.printStackTrace();
